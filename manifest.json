@@ -1,0 +1,30 @@
+{
+  "name": "Bus",
+  "description": "Gestão de Bus",
+  "version": "0.0.7",
+  "manifest_version": 2,
+  "icons": { "24": "img/24.png", "128": "img/128.png" },
+  "browser_action": {
+    "default_title": "Bus",
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [{
+    "js": ["libs/angular.min.js", "libs/ng-map.min.js"],
+    "matches": ["http://*/*", "https://*/*"]
+  }],
+  "web_accessible_resources": [
+    "data/*.json"
+  ],
+  "permissions": [
+    "tabs",
+    "https://maps.googleapis.com/*",
+    "https://maps.gstatic.com/*",
+    "identity",
+    "storage"
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com https://mts0.googleapis.com https://mts1.googleapis.com; object-src 'self';"
+
+}

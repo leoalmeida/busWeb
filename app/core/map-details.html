@@ -1,0 +1,121 @@
+<div flex layout-fill id="main" xmlns="http://www.w3.org/1999/html">
+    <md-card>
+        <md-card-header class="mdl-card__title mdl-card--expand mdl-color--teal-300">
+            <md-card-header-text class="mdl-card__title-text">
+            <div flex>
+                <form ng-submit="vm.getRoutes()" name="searchForm">
+                        <md-autocomplete
+                                         md-input-name="autocompleteField"
+                                         md-input-minlength="2"
+                                         md-input-maxlength="18"
+                                         md-no-cache="vm.noCache"
+                                         md-selected-item="vm.selectedLine"
+                                         md-search-text="vm.searchText"
+                                         md-items="item in vm.querySearch(vm.searchText)"
+                                         md-item-text="item.display"
+                                         ng-model="item.value"
+                                         placeholder="Selecione uma linha.."
+                                         md-floating-label="Linha selecionada (Enter)"
+                                         md-menu-class="autocomplete-custom-template">
+                            <md-item-template>
+                                <span class="item-title">
+                                    <md-icon md-svg-icon="img/ic_directions_bus_24px.svg"></md-icon>
+                                    <span>{{item.value}} </span>
+                                    </span>
+                                <span class="item-metadata">
+                                    <span class="item-metastat">
+                                      <strong>{{item.display}}</strong>
+                                    </span>
+                                    <span class="item-metastat" ng-if="item.circular">
+                                      <strong>(Circular)</strong>
+                                    </span>
+                                </span>
+                                <md-not-found>
+                                    Nenhuma linha encontrada com o texto "{{vm.searchText}}".
+                                </md-not-found>
+                            </md-item-template>
+                        </md-autocomplete>
+
+                    <!--<md-input-container>
+                        <label for="line" >Digite a linha...</label>
+                        <input id="line"  ng-model="vm.selectedLine" md-autofocus>
+                    </md-input-container>
+                    <md-button class="md-fab md-mini md-primary" aria-label="Get Routes" ng-disabled="vm.line==''">
+                        <md-icon class="material-icons">search</md-icon>
+                    </md-button>-->
+                </form>
+            </div>
+            </md-card-header-text>
+        </md-card-header>
+        <ng-map class="md-card-image"  map-type-id="TERRAIN"  zoom="13" center="{{vm.mapCenter}}" default-style="true">
+            <shape ng-if="vm.exists(vm.routes[$index].name, vm.selected)"
+                   name="polyline"
+                   ng-repeat="route in vm.routes track by $index"
+                   id="route-{{$index}}"
+                   options="{{route.options}}"
+                   on-mouseover="vm.onLineEnter(route)"
+                   on-mouseout="vm.onLineLeave(route)"
+                   on-click="vm.showDetail(event, route)"
+                   path="{{route.path}}"
+                   geodesic="true">
+            </shape>
+            <span ng-if="vm.exists('Leituras GPS', vm.selected)">
+                <shape  name="circle"
+                        ng-repeat="reading in vm.readRoutes[0].points track by $index"
+                        id="reading-{{$index}}"
+                        options="{{reading.options}}"
+                        center="{{[reading.lat,reading.lon]}}"
+                        radius="25"
+                        on-mouseover="vm.onLineEnter(reading)"
+                        on-mouseout="vm.onLineLeave(reading)"
+                        on-click="vm.showDetail(event, reading)"
+                        geodesic="true">
+                </shape>
+            </span>
+            <marker ng-if="vm.exists(vm.allMarkers[$index].name, vm.selected)"
+                    class="custom-marker"
+                    ng-repeat="marker in vm.allMarkers track by $index"
+                    id="stop-{{$index}}"
+                    on-click="vm.showDetail(event, vm.routes[$index], marker, 'Marcador')"
+                    position="{{marker}}"
+                    animation="DROP"
+                    icon="{{vm.bus}}"
+                    shape="{{vm.shape}}"
+                    no-watcher="true">
+            </marker>
+            <span ng-if="vm.exists('Paradas', vm.selected)">
+                <marker
+                        class="custom-marker"
+                        ng-repeat="stop in vm.allStops track by $index"
+                        id="stop-{{$index}}"
+                        on-click="vm.showStopDetail(event, stop)"
+                        position="{{[stop.lat,stop.lng]}}"
+                        animation="DROP"
+                        icon="{{vm.stop}}"
+                        shape="{{vm.shapeStop}}"
+                        no-watcher="true">
+                </marker>
+            </span>
+        </ng-map>
+    </md-card>
+    <div flex="100" id="panel">
+        <fieldset class="standard" >
+            <legend class="demo-legend">Legenda: </legend>
+            <div layout="row" flex="100">
+                <div flex="70">
+                    <md-checkbox aria-label="Select All"
+                                 ng-checked="vm.isChecked()"
+                                 md-indeterminate="vm.isIndeterminate()"
+                                 ng-click="vm.toggleAll()">
+                        <span ng-if="vm.isChecked()">Remove-</span> Todos
+                    </md-checkbox>
+                </div>
+                <div class="standard" flex="30" layout="column" ng-repeat="item in vm.items track by $index">
+                    <md-checkbox ng-checked="vm.exists(item, vm.selected)" ng-click="vm.toggle(item, vm.selected)">
+                        {{ item }}
+                    </md-checkbox>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</div>
