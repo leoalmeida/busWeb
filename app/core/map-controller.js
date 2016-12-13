@@ -81,14 +81,20 @@
             // vm.map.showInfoWindow(item.id, vm.infopos);
             var direcao = (vm.item.info.direction_id)?"Volta": "Ida";
 
+            var dtavl = new Date(vm.item.info.dtavl);
 
             var type = (vm.item.name=="Leituras GPS")? "Rota de GPS" : "Rota Padrão";
             var contentString = '<h3>' + type;
-            contentString += '</h3><br/> Linha: '+ vm.item.info.linha;
+            contentString += '</h3><br/> Linha (id): '+ vm.item.info.linha + ' (' + vm.item.info.idlinha + ')';
             contentString += '<br/> Direção: '+ direcao;
-            contentString +='<br/> Nome: '+ vm.item.info.nome;
-            contentString +='<br/> Latitude: ' + event.latLng.lat();
-            contentString +='<br/> Longitude: '+ event.latLng.lng();
+            contentString +='<br/> Nome: '+ vm.item.info.linha;
+            contentString +='<br/> Indice: '+ vm.item.info.shape_idx;
+            contentString +='<br/> Latitude: ' + vm.item.info.latitude;
+            contentString +='<br/> Longitude: '+ vm.item.info.longitude;
+            contentString +='<br/> Distancia Shape: '+ vm.item.info.shape_distance;
+            contentString +='<br/> Ponto: '+ vm.item.info.idponto;
+            contentString +='<br/> Data: '+ dtavl.getDate()  + "/" + (dtavl.getMonth()+1) + "/" + dtavl.getFullYear() + " " +
+                dtavl.getHours() + ":" + dtavl.getMinutes();
 
             infoWindow.setContent(contentString);
             if (marker) infoWindow.open(vm.map, marker);
@@ -160,7 +166,7 @@
                     routeID = vm.routes.push(new Route(marker));
                     vm.allMarkers.push(marker.shape_pt_lat, marker.shape_pt_lon);
 
-                    addCheckOption(vm.routes[routeID-1].name);
+                    addCheckOption(vm.routes[routeID-1].name, true);
                 }
 
                 vm.routes[routeID-1].push(marker);
@@ -170,7 +176,7 @@
 
             getDBInfo("linestops", loadStops, "trip_id", vm.selectedLine.key);
             //getDBInfo("readings"+vm.selectedLine.codigoLinha, loadReadings, "idlinha", vm.selectedLine.codigoLinha);
-            getDBInfo("readings"+vm.selectedLine.line, loadReadings, "linha", vm.selectedLine.value);
+            getHDFSInfo("sparkstream"+vm.selectedLine.codigoLinha, loadReadings, "linha", vm.selectedLine.value);
         };
         var loadAllLines = function() {
             vm.lines = this.data.map(function (line) {
@@ -201,7 +207,7 @@
                 };
             });
             vm.loadingDB--;
-            addCheckOption("Paradas");
+            addCheckOption("Paradas", false);
             $scope.$apply();
         };
         var loadReadings = function() {
@@ -217,7 +223,7 @@
                     lastdir = reading.sentido;
                     readID = vm.readRoutes.push(new Reading(reading));
                 }
-                vm.allReadings.push(vm.routes[reading.sentido-1].minPointDist(reading));
+                vm.allReadings.push(vm.routes[reading.sentido].minPointDist(reading));
             }
 
             vm.allReadings = vm.allReadings.sort(function(a,b){
@@ -228,21 +234,20 @@
             });
 
             if (vm.readings.length){
-                var routeID = vm.routes.push(new Reading(vm.readings[0], "Leituras GPS"));
-                addCheckOption("Leituras GPS");
-                var routeIDcorrected = vm.routes.push(new Reading(vm.readings[0], "GPS Fixed"));
-                addCheckOption("GPS Fixed");
-                var routeIDFull = vm.routes.push(new Reading(vm.readings[0], "GPS Full"));
-                addCheckOption("GPS Full");
+                var routeID = vm.routes.push(new Reading(vm.readings[0], "Clean"));
+                addCheckOption("Clean", true);
+                var routeIDcorrected = vm.routes.push(new Reading(vm.readings[0], "Corrigido"));
+                addCheckOption("Corrigido", true);
+                var routeIDFull = vm.routes.push(new Reading(vm.readings[0], "Full"));
+                addCheckOption("Full", true);
             }
 
             for (var i = 0; i < vm.allReadings.length; i++) {
                 var point = vm.allReadings[i];
-                if ((point.distance * 10000) < 2 ) {
+                if ((point.distance * 10000) < 1 ) {
                     vm.routes[routeID-1].push(point);
-                    vm.routes[routeIDcorrected-1].pushcorrected(point);
                 }
-
+                vm.routes[routeIDcorrected-1].pushcorrected(point);
                 vm.routes[routeIDFull-1].push(point);
             }
 
@@ -314,7 +319,7 @@
             }
         };
 
-        function addCheckOption(name){
+        function addCheckOption(name, selected){
             vm.items.push(name);
             vm.selected.push(name);
         }

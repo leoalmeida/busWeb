@@ -2,6 +2,7 @@
 var colors = ["#36c100", "#0060aa", "#373f34", "#668ba8", "#e2d393","#50514f", "#000000"];
 var defaultHoveredStroke = { strokeColor: '#d64f4f', strokeOpacity: 1.0, strokeWeight: 3 , zIndex: 5};
 var defaultLineStroke = {strokeColor: colors[0], strokeOpacity: 0.6, strokeWeight: 3, zIndex: 1};
+var url = "http://localhost:8080/";
 
 // Marker constructor
 function Marker(){
@@ -72,27 +73,23 @@ Route.prototype.getShape = function (direction_id, name, item) {
 };
 
 Route.prototype.minPointDist = function (point){
-    var indice = 0, min = 360;
-
-    this.points.every(function (element, index, array) {
+    /*this.points.every(function (element, index, array) {
         var distance = Math.sqrt(Math.pow((element.shape_pt_lat - point.lat), 2) + Math.pow((element.shape_pt_lon - point.lon), 2));
         if (distance < min) {
             min = distance;
             indice = index;
         }
         return true;
-    });
+    });*/
 
-    var closer = {
+    return {
         direction: point.sentido,
-        pointId: indice,
-        distance: min,
-        closerPath: [this.points[indice].shape_pt_lat, this.points[indice].shape_pt_lon],
-        lat: point.lat,
-        lon: point.lon
+        pointId: point.shape_idx,
+        distance: point.shape_distance,
+        closerPath: [point.shape_lat, point.shape_lon],
+        lat: point.latitude,
+        lon: point.longitude
     };
-
-    return closer;
 }
 
 // Reading constructor
@@ -176,3 +173,37 @@ function getDBInfo(storage, cb, key, keyval){
     xhr.send();
 };
 
+var re = new RegExp('^[{].*','g');
+
+// DBInfo actions
+DBInfo.prototype.HDFSprocess = function(callback, xhr) {
+    var objSchema = {};
+    var resp = xhr.responseText.split("\n");
+
+    var keyid = null;
+
+    if (this.key & !keyid) {
+        this.retcode = -1;
+        this.retmsg = "Chave inválida";
+    }else {
+        for (row in resp) {
+            if (resp[row]) this.data.push(JSON.parse(resp[row]));
+        }
+    }
+    callback.call(this);
+}
+
+// global actions
+function getHDFSInfo(storage, cb, key, keyval){
+    var xhr = new XMLHttpRequest();
+    var t = new DBInfo(key, keyval);
+
+    xhr.open("GET", url + storage, false);
+    xhr.onreadystatechange = function(){
+        if (xhr.readyState == 4) {
+            t.HDFSprocess(cb, xhr);
+        }
+    }
+
+    xhr.send();
+};

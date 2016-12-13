@@ -22,6 +22,7 @@
     "tabs",
     "https://maps.googleapis.com/*",
     "https://maps.gstatic.com/*",
+     "http://localhost:8080/*",
     "identity",
     "storage"
   ],
